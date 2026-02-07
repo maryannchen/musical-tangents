@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+<script>
+    let fast = d3.csv('data/classicHit.csv')
+        .then(data => data.filter(d =>
+            {
+                return d.Tempo > 160;
+            }
+        ))
+    console.log(fast)
+</script>
+</body>
+</html>
