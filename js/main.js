@@ -1,8 +1,9 @@
-// create a svg
 const width = 800;
 const height = 500;
 const disc_spacing = 70;
 let num_discs = 5;
+
+// create a svg obj
 let svg= d3.select("body").append("svg").attr("height", height).attr("width", width);
 let group=svg.append("g")
 
