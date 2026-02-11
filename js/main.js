@@ -14,6 +14,9 @@ let circlesGroup = group.append("g")
 // linear scale
 let pop_scale = d3.scaleLinear().domain([0, 100]).range([0, 150]);
 
+// data
+let data = null;
+
 // render the disc visualization
 renderDiscs();
 
@@ -23,9 +26,10 @@ function renderDiscs()
     const initial_year = 1990;
 
     // render the year text on screen
-    year_Text = group.append("text")
+    year_text = group.append("text")
+        .attr("id", "year-text")
         .attr("x", width / 8)       // horizontal center
-        .attr("y", 20)              // vertical position
+        .attr("y", 20)// vertical position
         .attr("text-anchor", "middle") // center the text horizontally
         .attr("alignment-baseline", "middle") // center vertically
         .style("font-family", "Futura, sans-serif")
@@ -39,8 +43,16 @@ function renderDiscs()
         row["Average Popularity"] = +row["Average Popularity"];
         row["Average Energy"] = +row["Average Energy"];
         return row;
-    }).then(data =>
+    }).then(csv_data =>
     {
+        // create a year slider
+        data = csv_data
+        const years = Array.from(new Set(data.map(d => d.Year)));
+
+        console.log(data);
+
+        createYearSlider(years);
+
         // log the data, filter the data by the initial year
         const dataForYear = data.filter(d => d.Year === initial_year);
 
@@ -68,11 +80,12 @@ function renderDiscs()
         generateRings(discs)
 
         // center ring
-        discs.append("circle").attr("r", d =>
+        discs.append("circle").attr("class", "center").attr("r", d =>
         pop_scale(d["Average Popularity"] * centre_size_prop)).attr("fill", "red");
 
         // add genre in the center
         discs.append("text")
+            .attr("class", "disc_text")
             .text(d => d.Genre) // or any property you want
             .attr("text-anchor", "middle") // horizontally center
             .attr("alignment-baseline", "middle") // vertically center
@@ -97,18 +110,81 @@ function generateRings(discs)
         const num_rings = Math.round(10 * energy);
         console.log('energy: ' + energy);
         console.log('num_rings: ' + num_rings);
-        const rings = d3.range(1, num_rings + 1);
+        const ring_arr = d3.range(1, num_rings + 1);
 
-        d3.select(this)
+        const rings = d3.select(this)
             .selectAll(".ring")
-            .data(rings)
-            .enter()
+            .data(ring_arr);
+
+        // exit pattern
+        rings.exit().remove();
+
+        rings.enter()
             .append("circle")
             .attr("class", "ring")
-            .attr("r", r => discRad * (r / (rings.length + 1)))
+            .merge(rings)
+            .attr("r", r => discRad * (r / (ring_arr.length + 1)))
             .attr("fill", "none")
             .attr("stroke", "#818281")
-            .attr("stroke-width", 1)
+            .attr("stroke-width", 1);
 
     })
+}
+
+// update the discs based on the new year
+function updateDiscs(year)
+{
+    // log the data, filter the data by the year user choose
+    const dataForYear = data.filter(d => d.Year === +year);
+
+    // sort the genres by popularity descending
+    const sortedGenres = dataForYear.sort((a, b) =>
+    {return b["Average Popularity"] - a["Average Popularity"]});
+
+    let top_5 = sortedGenres.slice(0, num_discs);
+
+    console.log(top_5);
+
+    const discs = circlesGroup
+        .selectAll(".disc")
+        .data(top_5);
+
+    discs.select("circle")
+    .transition()
+    .attr("r", d => pop_scale(d["Average Popularity"]));
+
+    generateRings(discs);
+
+    discs.select(".center")
+        .transition()
+        .attr("r", d => pop_scale(d["Average Popularity"] * centre_size_prop));
+
+    discs.select(".disc_text")
+        .transition()
+        .text(d => d.Genre)
+}
+
+function createYearSlider(years)
+{
+    console.log(d3.min(years));
+    console.log(d3.max(years));
+    let year_slider = d3
+        .select("#slider_container")
+        .append("input")
+        .attr("type", "range")
+        .attr("min", d3.min(years))
+        .attr("max", d3.max(years))
+        .attr("value", 1990)
+        .attr("step", 1)
+        .style("width", "300px")
+        .style("margin", "20px")
+        .style("display", "block");
+
+// respond to slider changes
+    year_slider.on("input", function() {
+        console.log("Slider value:", this.value);
+        let curr_year = document.getElementById("year-text");
+        curr_year.textContent = "Year: " + this.value;
+        updateDiscs(this.value);
+    });
 }
