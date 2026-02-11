@@ -1,3 +1,4 @@
+// constants
 const width = 1200;
 const height = 800;
 const disc_spacing = 160;
