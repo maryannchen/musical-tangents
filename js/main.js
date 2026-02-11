@@ -116,7 +116,7 @@ function generateRings(discs)
             .selectAll(".ring")
             .data(ring_arr);
 
-        // exit pattern
+        // exit pattern,
         rings.exit().remove();
 
         rings.enter()
