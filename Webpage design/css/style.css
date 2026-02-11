@@ -1,0 +1,222 @@
+:root {
+  --primary: #1E40AF;
+  --secondary: #0EA5E9;
+  --accent: #F59E0B;
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --text: #F8FAFC;
+  --muted: #94A3B8;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --slide-duration: 0.65s;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  font-family: 'Fira Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(30, 64, 175, 0.2), transparent 55%),
+    radial-gradient(ellipse 70% 60% at 75% 25%, rgba(245, 158, 11, 0.08), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(14, 165, 233, 0.1), transparent 55%);
+}
+
+.deck {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+body.slide-mode .deck { overflow: hidden; height: 100vh; }
+body.fallback-mode .deck { overflow-y: auto; min-height: 100vh; }
+
+.slide {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 1.5rem 5rem;
+  transition: opacity var(--slide-duration) var(--ease-out-expo), transform var(--slide-duration) var(--ease-out-expo);
+}
+body.slide-mode .slide {
+  position: fixed;
+  inset: 0;
+  padding: 4rem 1.5rem 5rem;
+  opacity: 0;
+  transform: translateY(22%) scale(0.97);
+  pointer-events: none;
+}
+body.slide-mode .slide.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  z-index: 2;
+}
+body.slide-mode .slide.slide-out {
+  opacity: 0;
+  transform: translateY(-22%) scale(0.97);
+  pointer-events: none;
+}
+body.slide-mode .slide.slide-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  z-index: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.slide-mode .slide,
+  body.slide-mode .slide.active,
+  body.slide-mode .slide.slide-out,
+  body.slide-mode .slide.slide-in { transition-duration: 0.15s; }
+}
+
+.slide-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+  max-height: calc(100vh - 6rem);
+}
+body.fallback-mode .slide { padding: 6rem 1.5rem 8rem; }
+body.fallback-mode .slide-inner { max-height: none; }
+
+.hero-line {
+  font-family: 'Fira Code', monospace;
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.hero-line strong { color: var(--accent); }
+.hero-sub {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--muted);
+  margin-top: 1.5rem;
+  max-width: 36ch;
+}
+.hook-visual { margin-top: 4rem; max-width: 520px; }
+.placeholder-viz {
+  min-height: 280px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px dashed rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.section-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--secondary);
+  margin-bottom: 0.75rem;
+}
+.section-title {
+  font-family: 'Fira Code', monospace;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+.section-desc {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 48ch;
+  margin-bottom: 3rem;
+}
+.viz-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(248, 250, 252, 0.06);
+  transition: border-color 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo);
+}
+.viz-card:hover { border-color: rgba(14, 165, 233, 0.3); box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.15); }
+.viz-card h3 {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+.viz-slot {
+  width: 100%;
+  min-height: 360px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px dashed rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+}
+.viz-slot.viz-tall { min-height: 380px; }
+.viz-slot.viz-table { min-height: 280px; }
+.rising .slide-inner { margin-left: 5%; max-width: 90%; }
+@media (max-width: 768px) { .rising .slide-inner { margin-left: 0; max-width: 100%; } }
+
+.aha-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+@media (max-width: 768px) { .aha-grid { grid-template-columns: 1fr; } }
+.formula-block {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 2.5rem;
+  border: 1px solid rgba(248, 250, 252, 0.08);
+}
+.formula-block .copy { color: var(--muted); font-size: 1rem; line-height: 1.6; }
+.formula-block code {
+  display: block;
+  font-family: 'Fira Code', monospace;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  color: var(--accent);
+  margin: 1rem 0;
+  letter-spacing: -0.02em;
+}
+.paths {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+@media (max-width: 768px) { .paths { grid-template-columns: 1fr; } }
+.path-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(248, 250, 252, 0.06);
+  cursor: pointer;
+  transition: border-color 0.3s var(--ease-out-expo), box-shadow 0.3s var(--ease-out-expo), transform 0.3s var(--ease-out-expo);
+}
+.path-card:hover {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 1px var(--secondary);
+  transform: translateY(-4px);
+}
+.path-card h3 { font-family: 'Fira Code', monospace; font-size: 1.05rem; margin-bottom: 0.5rem; color: var(--text); }
+.path-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+.path-card .icon { margin-bottom: 1rem; }
+
+.credits {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid rgba(248, 250, 252, 0.08);
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2rem;
+}
