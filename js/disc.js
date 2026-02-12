@@ -23,6 +23,22 @@ let data = null;
 // render the disc visualization
 renderDiscs();
 
+function displayPopUp(d, e) {
+    console.log('1');
+    console.log(d);
+    console.log(e);
+    const tooltip = d3.select("#tooltip");
+    tooltip.html(`<strong>Genre: ${d.Genre}<br>
+        <strong>Popularity:</strong> ${d["Average Popularity"]} / 100<br>
+            <strong> Energy:</strong> ${d["Average Energy"]} / 1.0`);
+
+    tooltip.style("left", (e.pageX + 10) + "px")
+        .style("top", (e.pageY + 10) + "px")
+        .transition()
+        .duration(300)
+        .style("opacity", 1);
+}
+
 function renderDiscs()
 {
     // initial year to render on screen
@@ -96,6 +112,11 @@ function renderDiscs()
             .attr("fill", "black") // contrast with red
             .style("font-size", d => Math.max(10, pop_scale(d["Average Popularity"] * centre_size_prop) / 2)) // optional dynamic font size
             .style("font-family", "Futura, sans-serif");
+
+        // listen for clicks
+        discs.on("click", (e, d) => {
+            displayPopUp(d, e);
+        })
 
     })
 }
@@ -194,20 +215,6 @@ function updateDiscs(year)
         .transition()
         .duration(600)
         .text(d => d.Genre);
-
-    // discs.select(".outer")
-    // .transition()
-    // .attr("r", d => pop_scale(d["Average Popularity"]));
-    //
-    // generateRings(discs);
-    //
-    // discs.select(".center")
-    //     .transition()
-    //     .attr("r", d => pop_scale(d["Average Popularity"] * centre_size_prop));
-    //
-    // discs.select(".disc_text")
-    //     .transition()
-    //     .text(d => d.Genre)
 }
 
 function createYearSlider(years)
