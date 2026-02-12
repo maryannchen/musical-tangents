@@ -3,64 +3,66 @@ const tickInterval = 10;
 const keyWidth = 40;
 const keyHeight = 200;
 const axisHeight = 30;
-const pianoPattern = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
-
+const pianoPattern = [0, 1, 1, 0, 1, 1, 1];
 const yearPositions = new Map();
 
 d3.csv("data/energy_and_pop_data.csv", row => {
     row.Year = +row.Year;
+    row["Average Popularity"] = +row["Average Popularity"];
     return row;
 }).then(data => {
 
-    let startYear = d3.min(data, d => d.Year);
-    let endYear = d3.max(data, d => d.Year);
-    while (pianoPattern[(endYear - startYear) % 12] === 1) {endYear++;}
-    const years = d3.range(startYear, endYear);
-
-    const whiteCount = years.filter((_, i) => pianoPattern[i % 12] === 0).length;
+    // some genre and year data properties
+    const genres = Object.values(data.reduce((acc, current) => {
+        if (!acc[current.Year] || current["Average Popularity"] > acc[current.Year]["Average Popularity"]) {
+            acc[current.Year] = current;
+        } return acc;
+    }, {})).sort((a, b) => a.Year - b.Year);
+    const uniqueGenres = genres.map(d => d.Genre).filter((value, index, self) => self.indexOf(value) === index);
+    const colorScale = d3.scaleOrdinal()
+        .domain(uniqueGenres)
+        .range(d3.schemeTableau10); // TBD: Change color palette since not enough colors for genres
+    const years = d3.range(d3.min(data, d => d.Year), d3.max(data, d => d.Year)+1);
+    
+    // d3 container set-up
+    const legend = d3.select("body").append("svg")
+        .attr("width", uniqueGenres.length * 100)
+        .attr("height", 30)
+        .append("g")
+        .attr("transform", "translate(10, 10)");
     const pianoContainer = d3.select("body")
         .append("div")
         .attr("id", "piano-container");
     const pianoSvg = pianoContainer.append("svg")
-        .attr("width", whiteCount * keyWidth)
+        .attr("width", years.length * keyWidth)
         .attr("height", keyHeight + axisHeight);
-
     const axisGroup = pianoSvg.append("g")
     const pianoKeys = pianoSvg.append("g")
         .attr("transform", `translate(0, ${axisHeight})`);
     
-    // Big keys
-    let keyIndex = 0;
+    // Piano keys
     years.forEach((year, i) => {
-        if (pianoPattern[i % 12] === 0) {
+        // colored keys
+        yearGenre = genres.find(d => d.Year === year)
+        if (yearGenre) {
+            color = colorScale(yearGenre.Genre);
+        } else { color = "white"; }   
+        pianoKeys.append("rect")
+            .attr("x", i * keyWidth)
+            .attr("width", keyWidth)
+            .attr("height", keyHeight)
+            .attr("fill", color)
+            .attr("stroke", "black");
+        yearPositions.set(year, i * keyWidth + (keyWidth / 2));
+        // Black keys (decorative)
+        if (pianoPattern[i % pianoPattern.length] === 1) {
             pianoKeys.append("rect")
-                .attr("x", keyIndex * keyWidth)
-                .attr("y", 0)
-                .attr("width", keyWidth)
-                .attr("height", keyHeight)
-                .attr("fill", "white")
-                .attr("stroke", "#bbb");
-            yearPositions.set(year, keyIndex * keyWidth + (keyWidth / 2));
-            keyIndex++;
-        }
-    });
-
-    // Small keys
-    keyIndex = 0;
-    years.forEach((year, i) => {
-        if (pianoPattern[i % 12] === 0) {
-            if (pianoPattern[(i + 1) % 12] === 1 && (i + 1) < years.length) {
-                pianoKeys.append("rect")
-                    .attr("x", (keyIndex + 1) * keyWidth - ((keyWidth * 0.7) / 2))
-                    .attr("y", 0)
-                    .attr("width", keyWidth * 0.7)
-                    .attr("height", keyHeight * 0.7)
-                    .attr("fill", "#333");
-                
-                yearPositions.set(year + 1, (keyIndex + 1) * keyWidth);
-            }
-            keyIndex++;
-        }
+                .attr("x", i * keyWidth - ((keyWidth * 0.7) / 2))
+                .attr("width", keyWidth * 0.7)
+                .attr("height", keyHeight * 0.7)
+                .attr("fill", "black")
+                .attr("stroke", "black");
+        } 
     });
 
     // Axis
@@ -70,15 +72,29 @@ d3.csv("data/energy_and_pop_data.csv", row => {
                 .attr("x",  yearPositions.get(year))
                 .attr("y", 20) 
                 .attr("text-anchor", "middle")
-                .style("font-family", "Arial, sans-serif")
-                .style("font-size", "12px")
-                .style("font-weight", "bold")
                 .text(year);
             axisGroup.append("line")
-                .attr("x1", yearPositions.get(year)).attr("x2",  yearPositions.get(year))
-                .attr("y1", 25).attr("y2", axisHeight)
-                .attr("stroke", "#888")
-                .attr("stroke-width", 1);
+                .attr("x1", yearPositions.get(year))
+                .attr("x2", yearPositions.get(year))
+                .attr("y1", 25)
+                .attr("y2", axisHeight)
+                .attr("stroke", "black")
         }
     });
+    
+    // legend
+    const legendItem = legend.selectAll(".legend-item")
+        .data(uniqueGenres)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(${i * 90}, 0)`);
+    legendItem.append("rect")
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", d => colorScale(d));
+    legendItem.append("text")
+        .attr("x", 20)
+        .attr("y", 12.5)
+        .text(d => d);
 });
