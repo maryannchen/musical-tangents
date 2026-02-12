@@ -5,6 +5,8 @@ const disc_spacing = 160;
 let num_discs = 5;
 const centre_size_prop = 0.30;
 let year_text = null;
+const min_year = 1950; // to ensure there's enough data to visualize, data before 1950 more spotty
+const max_year = 2023; // more recent data is likely still being updated
 
 // create a svg obj
 let svg= d3.select("body").append("svg").attr("height", height).attr("width", width);
@@ -74,6 +76,7 @@ function renderDiscs()
                 `translate(${100 + i * disc_spacing}, 150)`
             );
         discs.append("circle")
+            .attr("class", "outer")
             .attr("r", d => pop_scale(d["Average Popularity"]))
             .attr("fill", "black");
 
@@ -142,7 +145,28 @@ function updateDiscs(year)
     const sortedGenres = dataForYear.sort((a, b) =>
     {return b["Average Popularity"] - a["Average Popularity"]});
 
+    // select only the top 5 genres
     let top_5 = sortedGenres.slice(0, num_discs);
+
+    // compute disc radii
+    top_5.forEach(d => {d.radius = d["Average Popularity"]});
+
+    // disc padding
+    let disc_padding = 90;
+
+    // compute updated spacing
+    top_5.forEach((d, i) =>
+    {
+        if (i === 0)
+        {
+            d.x = 150
+        }
+        else
+        {
+            let prev = top_5[i - 1]
+            d.x = prev.x + prev.radius + d.radius + disc_padding;
+        }
+    })
 
     console.log(top_5);
 
@@ -150,31 +174,52 @@ function updateDiscs(year)
         .selectAll(".disc")
         .data(top_5);
 
-    discs.select("circle")
-    .transition()
-    .attr("r", d => pop_scale(d["Average Popularity"]));
+    discs.transition()
+        .duration(600)
+        .attr("transform", d => `translate(${d.x}, 150)`);
+
+    discs.select(".outer")
+        .transition()
+        .duration(600)
+        .attr("r", d => pop_scale(d["Average Popularity"]));
 
     generateRings(discs);
 
     discs.select(".center")
         .transition()
+        .duration(600)
         .attr("r", d => pop_scale(d["Average Popularity"] * centre_size_prop));
 
     discs.select(".disc_text")
         .transition()
-        .text(d => d.Genre)
+        .duration(600)
+        .text(d => d.Genre);
+
+    // discs.select(".outer")
+    // .transition()
+    // .attr("r", d => pop_scale(d["Average Popularity"]));
+    //
+    // generateRings(discs);
+    //
+    // discs.select(".center")
+    //     .transition()
+    //     .attr("r", d => pop_scale(d["Average Popularity"] * centre_size_prop));
+    //
+    // discs.select(".disc_text")
+    //     .transition()
+    //     .text(d => d.Genre)
 }
 
 function createYearSlider(years)
 {
-    console.log(d3.min(years));
+    console.log(min_year);
     console.log(d3.max(years));
     let year_slider = d3
         .select("#slider_container")
         .append("input")
         .attr("type", "range")
-        .attr("min", d3.min(years))
-        .attr("max", d3.max(years))
+        .attr("min", min_year)
+        .attr("max", max_year)
         .attr("value", 1990)
         .attr("step", 1)
         .style("width", "300px")
